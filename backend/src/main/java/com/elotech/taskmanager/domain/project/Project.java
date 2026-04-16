@@ -44,7 +44,7 @@ public class Project {
 
     public static Project create(String name, String description, User owner) {
         if (name == null || name.isBlank()) {
-            throw new DomainException("Nome do projeto é obrigatório");
+            throw new DomainException("Nome do projeto e obrigatorio");
         }
 
         if (owner == null) {
@@ -55,14 +55,14 @@ public class Project {
 
     public void addMember(User user) {
         if (user == null) {
-            throw new DomainException("Usuário é obrigatório");
+            throw new DomainException("Usuario e obrigatorio");
         }
         this.members.add(user);
     }
 
     public void removeMember(User user) {
         if (user.getId().equals(this.owner.getId())) {
-            throw new DomainException("Não é possível remover o dono do projeto");
+            throw new DomainException("Nao e possível remover o dono do projeto");
         }
         this.members.remove(user);
     }
@@ -80,12 +80,12 @@ public class Project {
             return  Role.MEMBER;
         }
 
-        throw new DomainException("Usuário não pertence a este projeto");
+        throw new DomainException("Usuario nao pertence a este projeto");
     }
 
     public void update(String name, String description) {
         if (name == null || name.isBlank()) {
-            throw new DomainException("Nome do projeto é obrigatório");
+            throw new DomainException("Nome do projeto e obrigatorio");
         }
         this.name = name.trim();
         this.description = description;

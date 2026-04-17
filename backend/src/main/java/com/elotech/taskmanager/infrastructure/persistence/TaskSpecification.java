@@ -9,6 +9,10 @@ import java.time.LocalDateTime;
 
 public class TaskSpecification {
 
+    public static Specification<Task> belongsToProject(Long projectId) {
+        return (root, query, cb) -> projectId == null ? null : cb.equal(root.get("project").get("id"), projectId);
+    }
+
     public static Specification<Task> hasStatus(TaskStatus status) {
         return (root, query, cb) -> status == null ? null : cb.equal(root.get("status"), status);
     }

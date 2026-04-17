@@ -21,13 +21,14 @@ public class ListTasksUseCase {
         this.taskRepository = taskRepository;
     }
 
-    public Page<Task> execute(TaskStatus status, TaskPriority priority,
+    public Page<Task> execute(Long projectId, TaskStatus status, TaskPriority priority,
                               Long assigneeId, LocalDateTime from,
                               LocalDateTime to, String search,
                               Pageable pageable) {
 
         Specification<Task> spec = Specification
-                .where(TaskSpecification.hasStatus(status))
+                .where(TaskSpecification.belongsToProject(projectId))
+                .and(TaskSpecification.hasStatus(status))
                 .and(TaskSpecification.hasPriority(priority))
                 .and(TaskSpecification.hasAssignee(assigneeId))
                 .and(TaskSpecification.createdAfter(from))

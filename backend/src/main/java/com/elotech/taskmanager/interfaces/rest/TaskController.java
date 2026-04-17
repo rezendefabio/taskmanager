@@ -124,7 +124,7 @@ public class TaskController {
         TaskPriority taskPriority = priority != null ? parsePriority(priority) : null;
 
         Page<TaskResponse> tasks = listTasksUseCase
-                .execute(taskStatus, taskPriority, assigneeId, from, to, search, pageable)
+                .execute(projectId, taskStatus, taskPriority, assigneeId, from, to, search, pageable)
                 .map(TaskResponse::fromEntity);
 
         return ResponseEntity.ok(tasks);

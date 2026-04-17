@@ -57,7 +57,7 @@ class ChangeTaskStatusUseCaseTest {
     @Test
     @DisplayName("Deve permitir mudar status de TODO para IN_PROGRESS")
     void shouldChangeFromTodoToInProgress() {
-        Task task = Task.create("Tarefa 1", "Desc", TaskPriority.MEDIUM, null, member);
+        Task task = Task.create("Tarefa 1", "Desc", TaskPriority.MEDIUM, null, member, project);
 
         when(projectRepository.findById(any())).thenReturn(Optional.of(project));
         when(userRepository.findById(any())).thenReturn(Optional.of(member));
@@ -73,7 +73,7 @@ class ChangeTaskStatusUseCaseTest {
     @Test
     @DisplayName("Regra 1: Nao deve permitir voltar de DONE para TODO")
     void shouldNotAllowDoneToTodo() {
-        Task task = Task.create("Tarefa 1", "Desc", TaskPriority.MEDIUM, null, null);
+        Task task = Task.create("Tarefa 1", "Desc", TaskPriority.MEDIUM, null, null, project);
         task.changeStatus(TaskStatus.IN_PROGRESS, Role.MEMBER);
         task.changeStatus(TaskStatus.DONE, Role.MEMBER);
 
@@ -91,7 +91,7 @@ class ChangeTaskStatusUseCaseTest {
     @Test
     @DisplayName("Regra 2: Apenas ADMIN pode fechar tarefa CRITICAL")
     void shouldNotAllowMemberToCloseCritical() {
-        Task task = Task.create("Tarefa Critica", "Desc", TaskPriority.CRITICAL, null, null);
+        Task task = Task.create("Tarefa Critica", "Desc", TaskPriority.CRITICAL, null, null, project);
         task.changeStatus(TaskStatus.IN_PROGRESS, Role.MEMBER);
 
         when(projectRepository.findById(any())).thenReturn(Optional.of(project));
@@ -108,7 +108,7 @@ class ChangeTaskStatusUseCaseTest {
     @Test
     @DisplayName("Regra 2: ADMIN pode fechar tarefa CRITICAL")
     void shouldAllowAdminToCloseCritical() {
-        Task task = Task.create("Tarefa Critica", "Desc", TaskPriority.CRITICAL, null, null);
+        Task task = Task.create("Tarefa Critica", "Desc", TaskPriority.CRITICAL, null, null, project);
         task.changeStatus(TaskStatus.IN_PROGRESS, Role.ADMIN);
 
         when(projectRepository.findById(any())).thenReturn(Optional.of(project));
@@ -124,14 +124,14 @@ class ChangeTaskStatusUseCaseTest {
     @Test
     @DisplayName("Regra 3: Nao deve permitir mais de 5 tarefas IN_PROGRESS por responsavel")
     void shouldEnforceWipLimit() {
-        Task task = Task.create("Tarefa 6", "Desc", TaskPriority.LOW, null, member);
+        Task task = Task.create("Tarefa 6", "Desc", TaskPriority.LOW, null, member, project);
 
         var inProgressTasks = java.util.List.of(
-                Task.create("T1", "", TaskPriority.LOW, null, member),
-                Task.create("T2", "", TaskPriority.LOW, null, member),
-                Task.create("T3", "", TaskPriority.LOW, null, member),
-                Task.create("T4", "", TaskPriority.LOW, null, member),
-                Task.create("T5", "", TaskPriority.LOW, null, member)
+                Task.create("T1", "", TaskPriority.LOW, null, member, project),
+                Task.create("T2", "", TaskPriority.LOW, null, member, project),
+                Task.create("T3", "", TaskPriority.LOW, null, member, project),
+                Task.create("T4", "", TaskPriority.LOW, null, member, project),
+                Task.create("T5", "", TaskPriority.LOW, null, member, project)
         );
 
         when(projectRepository.findById(any())).thenReturn(Optional.of(project));

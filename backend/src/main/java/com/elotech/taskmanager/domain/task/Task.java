@@ -1,5 +1,6 @@
 package com.elotech.taskmanager.domain.task;
 
+import com.elotech.taskmanager.domain.project.Project;
 import com.elotech.taskmanager.domain.shared.DomainException;
 import com.elotech.taskmanager.domain.user.Role;
 import com.elotech.taskmanager.domain.user.User;
@@ -41,40 +42,46 @@ public class Task {
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
+
     protected Task() {}
 
-    private Task(String title, String description, TaskPriority priority, LocalDateTime deadline, User assignee) {
+    private Task(String title, String description, TaskPriority priority,
+                 LocalDateTime deadline, User assignee, Project project) {
         this.title = title;
         this.description = description;
         this.status = TaskStatus.TODO;
         this.priority = priority;
         this.deadline = deadline;
         this.assignee = assignee;
+        this.project = project;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static Task create(String title, String description, TaskPriority priority, LocalDateTime deadline, User assignee) {
+    public static Task create(String title, String description, TaskPriority priority,
+                              LocalDateTime deadline, User assignee, Project project) {
         if (title == null || title.isBlank()) {
             throw new DomainException("Titulo e obrigatorio");
         }
-
         if (priority == null) {
             throw new DomainException("Prioridade e obrigatoria");
         }
-
-        return new Task(title.trim(), description, priority, deadline, assignee);
+        if (project == null) {
+            throw new DomainException("Projeto e obrigatorio");
+        }
+        return new Task(title.trim(), description, priority, deadline, assignee, project);
     }
 
-    //REGRA 1: DONE Nao pode voltar para TODO
-    //REGRA 2: Tarefa CRITICAL so pode ser fechada por ADMIN
     public void changeStatus(TaskStatus newStatus, Role userRole) {
         if (this.status == TaskStatus.DONE && newStatus == TaskStatus.TODO) {
             throw new DomainException("Tarefa DONE nao pode voltar para TODO");
         }
-        if (this.priority == TaskPriority.CRITICAL &&
-                newStatus == TaskStatus.DONE &&
-                userRole != Role.ADMIN) {
+        if (this.priority == TaskPriority.CRITICAL
+                && newStatus == TaskStatus.DONE
+                && userRole != Role.ADMIN) {
             throw new DomainException("Apenas ADMIN pode fechar tarefa CRITICAL");
         }
         this.status = newStatus;
@@ -113,4 +120,5 @@ public class Task {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public LocalDateTime getDeadline() { return deadline; }
     public User getAssignee() { return assignee; }
+    public Project getProject() { return project; }
 }

@@ -51,7 +51,7 @@ public class CreateTaskUseCase {
             }
         }
 
-        Task task = Task.create(title, description, priority, deadline, assignee);
+        Task task = Task.create(title, description, priority, deadline, assignee, project);
 
         return taskRepository.save(task);
     }

@@ -1,11 +1,13 @@
 package com.elotech.taskmanager.interfaces.rest;
 
+import com.elotech.taskmanager.application.project.usecase.GetProjectReportUseCase;
 import com.elotech.taskmanager.application.task.dto.CreateTaskRequest;
 import com.elotech.taskmanager.application.task.dto.TaskResponse;
 import com.elotech.taskmanager.application.task.dto.UpdateTaskRequest;
 import com.elotech.taskmanager.application.task.usecase.ChangeTaskStatusUseCase;
 import com.elotech.taskmanager.application.task.usecase.CreateTaskUseCase;
 import com.elotech.taskmanager.application.task.usecase.DeleteTaskUseCase;
+import com.elotech.taskmanager.application.task.usecase.ListTasksUseCase;
 import com.elotech.taskmanager.application.task.usecase.UpdateTaskUseCase;
 import com.elotech.taskmanager.domain.shared.DomainException;
 import com.elotech.taskmanager.domain.task.Task;
@@ -14,11 +16,15 @@ import com.elotech.taskmanager.domain.task.TaskStatus;
 import com.elotech.taskmanager.infrastructure.persistence.TaskRepository;
 import com.elotech.taskmanager.infrastructure.security.JwtService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/projects/{projectId}/tasks")
@@ -28,6 +34,8 @@ public class TaskController {
     private final UpdateTaskUseCase updateTaskUseCase;
     private final DeleteTaskUseCase deleteTaskUseCase;
     private final ChangeTaskStatusUseCase changeTaskStatusUseCase;
+    private final ListTasksUseCase listTasksUseCase;
+    private final GetProjectReportUseCase getProjectReportUseCase;
     private final TaskRepository taskRepository;
     private final JwtService jwtService;
 
@@ -35,12 +43,16 @@ public class TaskController {
                           UpdateTaskUseCase updateTaskUseCase,
                           DeleteTaskUseCase deleteTaskUseCase,
                           ChangeTaskStatusUseCase changeTaskStatusUseCase,
+                          ListTasksUseCase listTasksUseCase,
+                          GetProjectReportUseCase getProjectReportUseCase,
                           TaskRepository taskRepository,
                           JwtService jwtService) {
         this.createTaskUseCase = createTaskUseCase;
         this.updateTaskUseCase = updateTaskUseCase;
         this.deleteTaskUseCase = deleteTaskUseCase;
         this.changeTaskStatusUseCase = changeTaskStatusUseCase;
+        this.listTasksUseCase = listTasksUseCase;
+        this.getProjectReportUseCase = getProjectReportUseCase;
         this.taskRepository = taskRepository;
         this.jwtService = jwtService;
     }
@@ -98,10 +110,23 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskResponse>> listByProject(@PathVariable Long projectId) {
-        List<TaskResponse> tasks = taskRepository.findAll().stream()
-                .map(TaskResponse::fromEntity)
-                .toList();
+    public ResponseEntity<Page<TaskResponse>> listByProject(
+            @PathVariable Long projectId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) LocalDateTime from,
+            @RequestParam(required = false) LocalDateTime to,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+
+        TaskStatus taskStatus = status != null ? parseStatus(status) : null;
+        TaskPriority taskPriority = priority != null ? parsePriority(priority) : null;
+
+        Page<TaskResponse> tasks = listTasksUseCase
+                .execute(taskStatus, taskPriority, assigneeId, from, to, search, pageable)
+                .map(TaskResponse::fromEntity);
+
         return ResponseEntity.ok(tasks);
     }
 
@@ -111,6 +136,11 @@ public class TaskController {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new DomainException("Tarefa nao encontrada"));
         return ResponseEntity.ok(TaskResponse.fromEntity(task));
+    }
+
+    @GetMapping("/report")
+    public ResponseEntity<Map<String, Map<String, Long>>> report(@PathVariable Long projectId) {
+        return ResponseEntity.ok(getProjectReportUseCase.execute(projectId));
     }
 
     private Long extractUserId(String authHeader) {

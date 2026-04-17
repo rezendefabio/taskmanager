@@ -53,7 +53,7 @@ class TaskManagerIntegrationTest {
                 "/projects/" + projectId + "/members/" + member.userId(),
                 null, ProjectResponse.class, admin.token());
 
-        assertTrue(addMemberResponse.members().contains("Membro"));
+        assertTrue(addMemberResponse.members().stream().anyMatch(m -> m.name().equals("Membro")));
 
         // 3. Criar tarefas
         var task1 = post("/projects/" + projectId + "/tasks",

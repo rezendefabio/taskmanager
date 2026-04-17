@@ -4,6 +4,7 @@ import com.elotech.taskmanager.application.project.usecase.GetProjectReportUseCa
 import com.elotech.taskmanager.application.task.dto.CreateTaskRequest;
 import com.elotech.taskmanager.application.task.dto.TaskResponse;
 import com.elotech.taskmanager.application.task.dto.UpdateTaskRequest;
+import com.elotech.taskmanager.application.task.usecase.AssignTaskUseCase;
 import com.elotech.taskmanager.application.task.usecase.ChangeTaskStatusUseCase;
 import com.elotech.taskmanager.application.task.usecase.CreateTaskUseCase;
 import com.elotech.taskmanager.application.task.usecase.DeleteTaskUseCase;
@@ -34,6 +35,7 @@ public class TaskController {
     private final UpdateTaskUseCase updateTaskUseCase;
     private final DeleteTaskUseCase deleteTaskUseCase;
     private final ChangeTaskStatusUseCase changeTaskStatusUseCase;
+    private final AssignTaskUseCase assignTaskUseCase;
     private final ListTasksUseCase listTasksUseCase;
     private final GetProjectReportUseCase getProjectReportUseCase;
     private final TaskRepository taskRepository;
@@ -43,6 +45,7 @@ public class TaskController {
                           UpdateTaskUseCase updateTaskUseCase,
                           DeleteTaskUseCase deleteTaskUseCase,
                           ChangeTaskStatusUseCase changeTaskStatusUseCase,
+                          AssignTaskUseCase assignTaskUseCase,
                           ListTasksUseCase listTasksUseCase,
                           GetProjectReportUseCase getProjectReportUseCase,
                           TaskRepository taskRepository,
@@ -51,6 +54,7 @@ public class TaskController {
         this.updateTaskUseCase = updateTaskUseCase;
         this.deleteTaskUseCase = deleteTaskUseCase;
         this.changeTaskStatusUseCase = changeTaskStatusUseCase;
+        this.assignTaskUseCase = assignTaskUseCase;
         this.listTasksUseCase = listTasksUseCase;
         this.getProjectReportUseCase = getProjectReportUseCase;
         this.taskRepository = taskRepository;
@@ -97,6 +101,17 @@ public class TaskController {
 
         Task task = changeTaskStatusUseCase.execute(taskId, status, projectId, userId);
 
+        return ResponseEntity.ok(TaskResponse.fromEntity(task));
+    }
+
+    @PatchMapping("/{taskId}/assign")
+    public ResponseEntity<TaskResponse> assign(@PathVariable Long projectId,
+                                               @PathVariable Long taskId,
+                                               @RequestBody Map<String, Long> body,
+                                               @RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserId(authHeader);
+        Long assigneeId = body.get("assigneeId");
+        Task task = assignTaskUseCase.execute(taskId, assigneeId, projectId, userId);
         return ResponseEntity.ok(TaskResponse.fromEntity(task));
     }
 

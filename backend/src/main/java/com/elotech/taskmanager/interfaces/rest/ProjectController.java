@@ -6,6 +6,10 @@ import com.elotech.taskmanager.application.project.usecase.AddMemberUseCase;
 import com.elotech.taskmanager.application.project.usecase.CreateProjectUseCase;
 import com.elotech.taskmanager.application.project.usecase.ListUserProjectsUseCase;
 import com.elotech.taskmanager.domain.project.Project;
+import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.user.User;
+import com.elotech.taskmanager.infrastructure.persistence.ProjectRepository;
+import com.elotech.taskmanager.infrastructure.persistence.UserRepository;
 import com.elotech.taskmanager.infrastructure.security.JwtService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -16,19 +20,26 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/projects")
-public class ProjectController{
+public class ProjectController {
+
     private final CreateProjectUseCase createProjectUseCase;
     private final AddMemberUseCase addMemberUseCase;
     private final ListUserProjectsUseCase listUserProjectsUseCase;
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
 
     public ProjectController(CreateProjectUseCase createProjectUseCase,
                              AddMemberUseCase addMemberUseCase,
                              ListUserProjectsUseCase listUserProjectsUseCase,
+                             ProjectRepository projectRepository,
+                             UserRepository userRepository,
                              JwtService jwtService) {
         this.createProjectUseCase = createProjectUseCase;
         this.addMemberUseCase = addMemberUseCase;
         this.listUserProjectsUseCase = listUserProjectsUseCase;
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
         this.jwtService = jwtService;
     }
 
@@ -49,12 +60,49 @@ public class ProjectController{
         return ResponseEntity.ok(projects);
     }
 
+    @PutMapping("/{projectId}")
+    public ResponseEntity<ProjectResponse> update(@PathVariable Long projectId,
+                                                  @Valid @RequestBody CreateProjectRequest request,
+                                                  @RequestHeader("Authorization") String authHeader) {
+        Long requesterId = extractUserId(authHeader);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+
+        if (!project.getOwner().getId().equals(requesterId)) {
+            throw new DomainException("Apenas o dono pode editar o projeto");
+        }
+
+        project.update(request.name(), request.description());
+        project = projectRepository.save(project);
+        return ResponseEntity.ok(ProjectResponse.fromEntity(project));
+    }
+
     @PostMapping("/{projectId}/members/{userId}")
     public ResponseEntity<ProjectResponse> addMember(@PathVariable Long projectId,
                                                      @PathVariable Long userId,
                                                      @RequestHeader("Authorization") String authHeader) {
         Long requesterId = extractUserId(authHeader);
         Project project = addMemberUseCase.execute(projectId, userId, requesterId);
+        return ResponseEntity.ok(ProjectResponse.fromEntity(project));
+    }
+
+    @DeleteMapping("/{projectId}/members/{userId}")
+    public ResponseEntity<ProjectResponse> removeMember(@PathVariable Long projectId,
+                                                        @PathVariable Long userId,
+                                                        @RequestHeader("Authorization") String authHeader) {
+        Long requesterId = extractUserId(authHeader);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+
+        if (!project.getOwner().getId().equals(requesterId)) {
+            throw new DomainException("Apenas o dono pode remover membros");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+
+        project.removeMember(user);
+        project = projectRepository.save(project);
         return ResponseEntity.ok(ProjectResponse.fromEntity(project));
     }
 

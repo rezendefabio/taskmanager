@@ -10,11 +10,13 @@ public record ProjectResponse(
         String name,
         String description,
         String ownerName,
-        Set<String> members
+        Set<MemberResponse> members
 ) {
+    public record MemberResponse(Long id, String name) {}
+
     public static ProjectResponse fromEntity(Project project) {
-        Set<String> memberNames = project.getMembers().stream()
-                .map(user -> user.getName())
+        Set<MemberResponse> memberList = project.getMembers().stream()
+                .map(user -> new MemberResponse(user.getId(), user.getName()))
                 .collect(Collectors.toSet());
 
         return new ProjectResponse(
@@ -22,7 +24,7 @@ public record ProjectResponse(
                 project.getName(),
                 project.getDescription(),
                 project.getOwner().getName(),
-                memberNames
+                memberList
         );
     }
 }

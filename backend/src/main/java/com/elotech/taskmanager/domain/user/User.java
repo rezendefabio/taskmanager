@@ -3,8 +3,6 @@ package com.elotech.taskmanager.domain.user;
 import com.elotech.taskmanager.domain.shared.DomainException;
 import jakarta.persistence.*;
 
-import java.util.Locale;
-
 @Entity
 @Table(name = "users")
 public class User {
@@ -37,41 +35,27 @@ public class User {
 
     public static User create(String name, String email, String password, Role role) {
         if (name == null || name.isBlank()) {
-            throw new DomainException("Nome é obrigatório");
+            throw new DomainException("Nome e obrigatorio");
         }
-
         if (email == null || email.isBlank()) {
-            throw new DomainException("E-mail é obrigatório");
+            throw new DomainException("E-mail e obrigatorio");
         }
-
         if (password == null || password.isBlank()) {
-            throw new DomainException("Senha é obrigatória");
+            throw new DomainException("Senha e obrigatoria");
         }
-
         if (role == null) {
-            throw new DomainException("Role é obrigatória");
+            throw new DomainException("Role e obrigatoria");
         }
-
         return new User(name.trim(), email.trim().toLowerCase(), password, role);
     }
 
-    public Long getId() {
-        return id;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Role getRole() {
-        return role;
-    }
+    public Long getId() { return id; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
+    public String getName() { return name; }
+    public Role getRole() { return role; }
 }

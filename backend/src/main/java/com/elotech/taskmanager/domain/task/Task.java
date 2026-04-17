@@ -56,21 +56,21 @@ public class Task {
 
     public static Task create(String title, String description, TaskPriority priority, LocalDateTime deadline, User assignee) {
         if (title == null || title.isBlank()) {
-            throw new DomainException("Título é obrigatório");
+            throw new DomainException("Titulo e obrigatorio");
         }
 
         if (priority == null) {
-            throw new DomainException("Prioridade é obrigatória");
+            throw new DomainException("Prioridade e obrigatoria");
         }
 
         return new Task(title.trim(), description, priority, deadline, assignee);
     }
 
-    //REGRA 1: DONE não pode voltar para TODO
-    //REGRA 2: Tarefa CRITICAL só pode ser fechada por ADMIN
+    //REGRA 1: DONE Nao pode voltar para TODO
+    //REGRA 2: Tarefa CRITICAL so pode ser fechada por ADMIN
     public void changeStatus(TaskStatus newStatus, Role userRole) {
         if (this.status == TaskStatus.DONE && newStatus == TaskStatus.TODO) {
-            throw new DomainException("Tarefa DONE não pode voltar para TODO");
+            throw new DomainException("Tarefa DONE nao pode voltar para TODO");
         }
         if (this.priority == TaskPriority.CRITICAL &&
                 newStatus == TaskStatus.DONE &&
@@ -88,7 +88,7 @@ public class Task {
 
     public void changePriority(TaskPriority newPriority) {
         if (this.status == TaskStatus.DONE) {
-            throw new DomainException("Não é permitido alterar prioridade de tarefa DONE");
+            throw new DomainException("Nao e permitido alterar prioridade de tarefa DONE");
         }
         this.priority = newPriority;
         this.updatedAt = LocalDateTime.now();
@@ -96,7 +96,7 @@ public class Task {
 
     public void update(String title, String description, LocalDateTime deadline) {
         if (title == null || title.isBlank()) {
-            throw new DomainException("Título é obrigatório");
+            throw new DomainException("Titulo e obrigatorio");
         }
         this.title = title.trim();
         this.description = description;

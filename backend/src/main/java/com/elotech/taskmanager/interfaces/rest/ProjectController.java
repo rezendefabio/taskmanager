@@ -9,6 +9,7 @@ import com.elotech.taskmanager.domain.project.Project;
 import com.elotech.taskmanager.domain.shared.DomainException;
 import com.elotech.taskmanager.domain.user.User;
 import com.elotech.taskmanager.infrastructure.persistence.ProjectRepository;
+import com.elotech.taskmanager.infrastructure.persistence.TaskRepository;
 import com.elotech.taskmanager.infrastructure.persistence.UserRepository;
 import com.elotech.taskmanager.infrastructure.security.JwtService;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class ProjectController {
     private final AddMemberUseCase addMemberUseCase;
     private final ListUserProjectsUseCase listUserProjectsUseCase;
     private final ProjectRepository projectRepository;
+    private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final JwtService jwtService;
 
@@ -33,12 +35,14 @@ public class ProjectController {
                              AddMemberUseCase addMemberUseCase,
                              ListUserProjectsUseCase listUserProjectsUseCase,
                              ProjectRepository projectRepository,
+                             TaskRepository taskRepository,
                              UserRepository userRepository,
                              JwtService jwtService) {
         this.createProjectUseCase = createProjectUseCase;
         this.addMemberUseCase = addMemberUseCase;
         this.listUserProjectsUseCase = listUserProjectsUseCase;
         this.projectRepository = projectRepository;
+        this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
     }
@@ -60,6 +64,23 @@ public class ProjectController {
         return ResponseEntity.ok(projects);
     }
 
+    @GetMapping("/{projectId}")
+    public ResponseEntity<ProjectResponse> getById(@PathVariable Long projectId,
+                                                   @RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserId(authHeader);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+
+        if (!project.isMember(user)) {
+            throw new DomainException("Usuario nao pertence a este projeto");
+        }
+
+        return ResponseEntity.ok(ProjectResponse.fromEntity(project));
+    }
+
     @PutMapping("/{projectId}")
     public ResponseEntity<ProjectResponse> update(@PathVariable Long projectId,
                                                   @Valid @RequestBody CreateProjectRequest request,
@@ -75,6 +96,22 @@ public class ProjectController {
         project.update(request.name(), request.description());
         project = projectRepository.save(project);
         return ResponseEntity.ok(ProjectResponse.fromEntity(project));
+    }
+
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<Void> delete(@PathVariable Long projectId,
+                                       @RequestHeader("Authorization") String authHeader) {
+        Long requesterId = extractUserId(authHeader);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+
+        if (!project.getOwner().getId().equals(requesterId)) {
+            throw new DomainException("Apenas o dono pode excluir o projeto");
+        }
+
+        taskRepository.deleteAll(taskRepository.findAllByProjectId(projectId));
+        projectRepository.delete(project);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{projectId}/members/{userId}")

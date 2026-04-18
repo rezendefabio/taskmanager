@@ -104,6 +104,23 @@ public class TaskController {
         return ResponseEntity.ok(TaskResponse.fromEntity(task));
     }
 
+    @PatchMapping("/{taskId}/priority")
+    public ResponseEntity<TaskResponse> changePriority(@PathVariable Long projectId,
+                                                       @PathVariable Long taskId,
+                                                       @RequestBody String newPriority,
+                                                       @RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserId(authHeader);
+        TaskPriority priority = parsePriority(newPriority.replace("\"", "").trim());
+
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new DomainException("Tarefa nao encontrada"));
+
+        task.changePriority(priority);
+        task = taskRepository.save(task);
+
+        return ResponseEntity.ok(TaskResponse.fromEntity(task));
+    }
+
     @PatchMapping("/{taskId}/assign")
     public ResponseEntity<TaskResponse> assign(@PathVariable Long projectId,
                                                @PathVariable Long taskId,
@@ -147,9 +164,16 @@ public class TaskController {
 
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskResponse> getById(@PathVariable Long projectId,
-                                                @PathVariable Long taskId) {
+                                                @PathVariable Long taskId,
+                                                @RequestHeader("Authorization") String authHeader) {
+        Long userId = extractUserId(authHeader);
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new DomainException("Tarefa nao encontrada"));
+
+        if (!task.getProject().getId().equals(projectId)) {
+            throw new DomainException("Tarefa nao pertence a este projeto");
+        }
+
         return ResponseEntity.ok(TaskResponse.fromEntity(task));
     }
 

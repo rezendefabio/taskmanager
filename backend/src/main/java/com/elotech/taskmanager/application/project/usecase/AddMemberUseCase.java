@@ -2,6 +2,7 @@ package com.elotech.taskmanager.application.project.usecase;
 
 import com.elotech.taskmanager.domain.project.Project;
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import com.elotech.taskmanager.domain.user.User;
 import com.elotech.taskmanager.infrastructure.persistence.ProjectRepository;
 import com.elotech.taskmanager.infrastructure.persistence.UserRepository;
@@ -21,14 +22,14 @@ public class AddMemberUseCase {
 
     public Project execute(Long projectId, Long userId, Long requesterId) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         if (!project.getOwner().getId().equals(requesterId)) {
             throw new DomainException("Apenas o dono do projeto pode adicionar membros");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
         project.addMember(user);
 

@@ -1,6 +1,7 @@
 package com.elotech.taskmanager.application.project.usecase;
 
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import com.elotech.taskmanager.infrastructure.persistence.ProjectRepository;
 import com.elotech.taskmanager.infrastructure.persistence.TaskRepository;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class GetProjectReportUseCase {
 
     public Map<String, Map<String, Long>> execute(Long projectId) {
         if (!projectRepository.existsById(projectId)) {
-            throw new DomainException("Projeto nao encontrado");
+            throw new NotFoundException("Projeto nao encontrado");
         }
 
         var tasks = taskRepository.findAllByProjectId(projectId);

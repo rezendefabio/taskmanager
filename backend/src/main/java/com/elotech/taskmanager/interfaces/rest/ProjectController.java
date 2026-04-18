@@ -7,6 +7,7 @@ import com.elotech.taskmanager.application.project.usecase.CreateProjectUseCase;
 import com.elotech.taskmanager.application.project.usecase.ListUserProjectsUseCase;
 import com.elotech.taskmanager.domain.project.Project;
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import com.elotech.taskmanager.domain.user.User;
 import com.elotech.taskmanager.infrastructure.persistence.ProjectRepository;
 import com.elotech.taskmanager.infrastructure.persistence.TaskRepository;
@@ -69,10 +70,10 @@ public class ProjectController {
                                                    @RequestHeader("Authorization") String authHeader) {
         Long userId = extractUserId(authHeader);
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
         if (!project.isMember(user)) {
             throw new DomainException("Usuario nao pertence a este projeto");
@@ -87,7 +88,7 @@ public class ProjectController {
                                                   @RequestHeader("Authorization") String authHeader) {
         Long requesterId = extractUserId(authHeader);
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         if (!project.getOwner().getId().equals(requesterId)) {
             throw new DomainException("Apenas o dono pode editar o projeto");
@@ -103,7 +104,7 @@ public class ProjectController {
                                        @RequestHeader("Authorization") String authHeader) {
         Long requesterId = extractUserId(authHeader);
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         if (!project.getOwner().getId().equals(requesterId)) {
             throw new DomainException("Apenas o dono pode excluir o projeto");
@@ -129,14 +130,14 @@ public class ProjectController {
                                                         @RequestHeader("Authorization") String authHeader) {
         Long requesterId = extractUserId(authHeader);
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         if (!project.getOwner().getId().equals(requesterId)) {
             throw new DomainException("Apenas o dono pode remover membros");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
         project.removeMember(user);
         project = projectRepository.save(project);

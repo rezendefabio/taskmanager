@@ -1,6 +1,7 @@
 package com.elotech.taskmanager.interfaces.rest;
 
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,4 +24,12 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN, "Acesso negado"
         );
     }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ProblemDetail handleNotFound(NotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage()
+        );
+    }
+
 }

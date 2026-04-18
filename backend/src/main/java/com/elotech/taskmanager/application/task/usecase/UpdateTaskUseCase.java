@@ -2,6 +2,7 @@ package com.elotech.taskmanager.application.task.usecase;
 
 import com.elotech.taskmanager.domain.project.Project;
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import com.elotech.taskmanager.domain.task.Task;
 import com.elotech.taskmanager.domain.user.User;
 import com.elotech.taskmanager.infrastructure.persistence.ProjectRepository;
@@ -30,17 +31,17 @@ public class UpdateTaskUseCase {
                         String description, LocalDateTime deadline, Long requesterId) {
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
         if (!project.isMember(requester)) {
             throw new DomainException("Usuario nao pertence a este projeto");
         }
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new DomainException("Tarefa nao encontrada"));
+                .orElseThrow(() -> new NotFoundException("Tarefa nao encontrada"));
 
         task.update(title, description, deadline);
 

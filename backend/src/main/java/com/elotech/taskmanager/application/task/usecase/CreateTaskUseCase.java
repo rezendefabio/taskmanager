@@ -2,6 +2,7 @@ package com.elotech.taskmanager.application.task.usecase;
 
 import com.elotech.taskmanager.domain.project.Project;
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import com.elotech.taskmanager.domain.task.Task;
 import com.elotech.taskmanager.domain.task.TaskPriority;
 import com.elotech.taskmanager.domain.user.User;
@@ -32,10 +33,10 @@ public class CreateTaskUseCase {
                         Long assigneeId, Long requesterId) {
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainException("Projeto nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Projeto nao encontrado"));
 
         User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new DomainException("Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
         if (!project.isMember(requester)) {
             throw new DomainException("Usuario nao pertence a este projeto");
@@ -44,7 +45,7 @@ public class CreateTaskUseCase {
         User assignee = null;
         if (assigneeId != null) {
             assignee = userRepository.findById(assigneeId)
-                    .orElseThrow(() -> new DomainException("Responsavel nao encontrado"));
+                    .orElseThrow(() -> new NotFoundException("Responsavel nao encontrado"));
 
             if (!project.isMember(assignee)) {
                 throw new DomainException("Responsavel nao pertence a este projeto");

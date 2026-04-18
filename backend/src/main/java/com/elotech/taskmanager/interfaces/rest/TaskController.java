@@ -11,6 +11,7 @@ import com.elotech.taskmanager.application.task.usecase.DeleteTaskUseCase;
 import com.elotech.taskmanager.application.task.usecase.ListTasksUseCase;
 import com.elotech.taskmanager.application.task.usecase.UpdateTaskUseCase;
 import com.elotech.taskmanager.domain.shared.DomainException;
+import com.elotech.taskmanager.domain.shared.NotFoundException;
 import com.elotech.taskmanager.domain.task.Task;
 import com.elotech.taskmanager.domain.task.TaskPriority;
 import com.elotech.taskmanager.domain.task.TaskStatus;
@@ -113,7 +114,7 @@ public class TaskController {
         TaskPriority priority = parsePriority(newPriority.replace("\"", "").trim());
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new DomainException("Tarefa nao encontrada"));
+                .orElseThrow(() -> new NotFoundException("Tarefa nao encontrada"));
 
         task.changePriority(priority);
         task = taskRepository.save(task);
@@ -168,7 +169,7 @@ public class TaskController {
                                                 @RequestHeader("Authorization") String authHeader) {
         Long userId = extractUserId(authHeader);
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new DomainException("Tarefa nao encontrada"));
+                .orElseThrow(() -> new NotFoundException("Tarefa nao encontrada"));
 
         if (!task.getProject().getId().equals(projectId)) {
             throw new DomainException("Tarefa nao pertence a este projeto");
